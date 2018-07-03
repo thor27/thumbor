@@ -305,6 +305,25 @@ class HttpLoaderWithHeadersForwardingTestCase(DummyAsyncHttpClientTestCase):
         expect(result.buffer).to_include("X-Server:thumbor\n")
         expect(result.buffer).to_include("X-Test:123\n")
 
+    def test_load_with_empty_accept(self):
+        url = self.get_url('/')
+        config = Config()
+        config.HTTP_LOADER_FORWARD_ALL_HEADERS = False
+        config.HTTP_LOADER_FORWARD_HEADERS_WHITELIST = ["X-Server"]
+        handler_mock_options = {
+            "Accept-Encoding": "gzip",
+            "User-Agent": "Thumbor",
+            "Host": "localhost",
+            "Accept": "",
+            "X-Server": "thumbor"
+        }
+        ctx = Context(None, config, None, HandlerMock(handler_mock_options))
+
+        loader.load(ctx, url, self.stop)
+        result = self.wait()
+        expect(result).to_be_instance_of(LoaderResult)
+        expect(result.buffer).to_include("Accept:image/*;q=0.9,*/*;q=0.1")
+
 
 class HttpLoaderWithUserAgentForwardingTestCase(DummyAsyncHttpClientTestCase):
 
